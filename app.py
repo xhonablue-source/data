@@ -1,161 +1,149 @@
 import streamlit as st
+import numpy as np
+import pandas as pd
+import plotly.express as px
 
 st.set_page_config(
-    page_title="CognitiveCloud.ai Math Apps",
-    page_icon="🧠",
+    page_title="Data Detectives: Mean, Median, Mode, and Range",
+    page_icon="🔎",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Custom top-level branding
+# --- Title and Introduction ---
+st.title("🔎 Data Detectives: Mean, Median, Mode, and Range")
 st.markdown("""
-<div style="text-align: center; margin-bottom: 2rem;">
-    <h1 style="color: #1f77b4; font-size: 3rem; font-weight: bold; margin-bottom: 0;">CognitiveCloud.ai</h1>
-    <p style="color: #666; font-size: 1.2rem; margin-top: 0;">Created by Xavier Honablue M.Ed</p>
-</div>
-""", unsafe_allow_html=True)
+Welcome, Data Detective! This lesson introduces you to the main ways we can find the **center** and **spread** of a data set. Understanding these measures is the first step to becoming a data expert!
+""")
 
-# Custom CSS for better styling
-st.markdown("""
-<style>
-    .main-header {
-        text-align: center;
-        color: #1f77b4;
-        font-size: 3rem;
-        font-weight: bold;
-        margin-bottom: 1rem;
-    }
-    .sub-header {
-        text-align: center;
-        color: #666;
-        font-size: 1.2rem;
-        margin-bottom: 2rem;
-    }
-    .app-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 1.5rem;
-        border-radius: 15px;
-        margin: 0.5rem;
-        text-align: center;
-        color: white;
-        text-decoration: none;
-        transition: transform 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-    .app-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-    }
-    .app-icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-    }
-    .app-title {
-        font-size: 1.5rem;
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-    }
-    .app-description {
-        font-size: 0.9rem;
-        opacity: 0.9;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# App data, organized by subject
-subjects = {
-    "Mindset": [
-        { "name": "🌱 Growth Mindset Explorer", "description": "Build confidence and resilience through math challenges", "url": "https://growth-mindset-ed.streamlit.app/", "icon": "🌱", "color": "#81C784" },
-        { "name": "🌟 Positive Mindset Math", "description": "4th Grade Multiplication with growth mindset activities", "url": "https://algebra1rules-q94clpmtxy8hzwvxs6jxwx.streamlit.app/", "icon": "🌟", "color": "#FFB6C1" }
-    ],
-    "Early Math": [
-        { "name": "➗ Division Dash", "description": "Practice division skills with interactive games and quizzes", "url": "https://division.streamlit.app/", "icon": "➗", "color": "#FFC0CB" },
-        { "name": "🍕 Fractions (Pizza Cutter)", "description": "Learn fractions with interactive pizza slices", "url": "https://pizza-math.streamlit.app/", "icon": "🍕", "color": "#DDA0DD" },
-        { "name": "✏️ Pencil Dashboard", "description": "4th grade math lesson with surface area", "url": "https://pencil-dashboard.streamlit.app/", "icon": "✏️", "color": "#82E0AA" }
-    ],
-    "Statistics": [
-        { "name": "🎯 Vision: See the Distribution", "description": "Explore normal distributions, real-world data, and global impact", "url": "https://vision-distribution.streamlit.app/", "icon": "🎯", "color": "#FAD02C" }
-    ],
-    "Algebra": [
-        { "name": "📐 Algebra Rules", "description": "Master algebraic concepts and rules", "url": "https://mathcraft-algebrarules1.streamlit.app/", "icon": "📐", "color": "#FF6B6B" },
-        { "name": "🚂 Train Motion", "description": "Algebra with motion problems", "url": "https://mathcraft-trainmotion.streamlit.app/", "icon": "🚂", "color": "#F9E79F" },
-        { "name": "📈 Distribution Curves", "description": "Statistical distributions and probability", "url": "https://algebra1rules-q94clpmtxy8hzwvxs6jxwx.streamlit.app/", "icon": "📈", "color": "#FFEAA7" }
-    ],
-    "Geometry & Visual Math": [
-        { "name": "🔴 Conic Sections", "description": "Visualize circles, ellipses, parabolas & hyperbolas", "url": "https://mathcraft-conicsections.streamlit.app/", "icon": "🔴", "color": "#45B7D1" },
-        { "name": "🌀 Spiral Vision: Fibonacci & Golden Ratio", "description": "Discover nature's secret mathematical spiral patterns", "url": "https://fibonacci-ratio.streamlit.app/", "icon": "🌀", "color": "#E17055" },
-        { "name": "🔺 Tessellations", "description": "Geometric pattern exploration", "url": "https://mathcraft-tesselations.streamlit.app/", "icon": "🔺", "color": "#D7BDE2" },
-        { "name": "🎯 Trigonometry", "description": "Sine, cosine, tangent, and more", "url": "https://mathcraft-trigonometry.streamlit.app/", "icon": "🎯", "color": "#BB8FCE" }
-    ],
-    "Calculus & Advanced Topics": [
-        { "name": "📉 Calculus: Inflection Explorer", "description": "Visualize concavity, inflection points, and second derivatives", "url": "https://calculus-inflections.streamlit.app/", "icon": "📉", "color": "#A29BFE" },
-        { "name": "📊 Calculus", "description": "Explore derivatives, integrals, and limits", "url": "https://calculus.streamlit.app/", "icon": "📊", "color": "#4ECDC4" },
-        { "name": "🔢 Discrete Structures", "description": "Logic, sets, and combinatorics", "url": "https://mathcraft-discretestructures.streamlit.app/", "icon": "🔢", "color": "#96CEB4" },
-        { "name": "⚡ Irrational Numbers", "description": "Explore pi, e, and other irrational numbers", "url": "https://mathcraft-irrationalnumbers.streamlit.app/", "icon": "⚡", "color": "#F7DC6F" },
-        { "name": "📊 Polynomial Zeros", "description": "Explore polynomial functions and find their zeros/roots", "url": "https://mathcraft-twistedcurves.streamlit.app/", "icon": "📊", "color": "#F8C471" }
-    ],
-    "Physics & Applied Math": [
-        { "name": "💧 Bernoulli's Principle", "description": "Explore fluid dynamics and the inverse relationship between speed and pressure.", "url": "https://bernoulli-princial.streamlit.app/", "icon": "💧", "color": "#5DADE2" },
-        { "name": "🧲 Magnetism & Math", "description": "Explore magnetic fields, equations, and math connections", "url": "https://mathofmagnetism.streamlit.app/", "icon": "🧲", "color": "#00B894" },
-        { "name": "🔄 Particle Motion", "description": "Physics and motion visualizations", "url": "https://mathcraft-particlemotion.streamlit.app/", "icon": "🔄", "color": "#85C1E9" }
-    ]
-}
-
-# Create a grid layout
-cols_per_row = 3
-
-for subject, app_list in subjects.items():
-    st.markdown("---")
-    st.markdown(f'<h2 style="font-size: 2rem; color: #1f77b4;">{subject}</h2>', unsafe_allow_html=True)
-    rows = [app_list[i:i + cols_per_row] for i in range(0, len(app_list), cols_per_row)]
-    
-    for row in rows:
-        cols = st.columns(len(row))
-        for col, app in zip(cols, row):
-            with col:
-                st.markdown(f"""
-                <a href="{app['url']}" target="_blank" style="text-decoration: none;">
-                    <div style="
-                        background: linear-gradient(135deg, {app['color']}22 0%, {app['color']}44 100%);
-                        border: 2px solid {app['color']};
-                        padding: 1.5rem;
-                        border-radius: 15px;
-                        text-align: center;
-                        margin: 0.5rem 0;
-                        transition: all 0.3s ease;
-                    ">
-                        <div style="font-size: 3rem; margin-bottom: 1rem;">{app['icon']}</div>
-                        <h3 style="color: #333; margin-bottom: 0.5rem; font-size: 1.5rem;">{app['name'].split(' ', 1)[1]}</h3>
-                        <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem; min-height: 45px;">{app['description']}</p>
-                        <div style="
-                            background: {app['color']};
-                            color: white;
-                            padding: 0.75rem 1.5rem;
-                            border-radius: 25px;
-                            text-decoration: none;
-                            font-weight: bold;
-                            transition: all 0.3s ease;
-                            display: inline-block;
-                        ">Launch App</div>
-                    </div>
-                </a>
-                """, unsafe_allow_html=True)
-
-# Footer
 st.markdown("---")
-st.markdown("""
-<div style="text-align: center; margin-top: 2rem; color: #666;">
-    <p>💡 <strong>Empowering Young Minds in STEAM</strong></p>
-</div>
-""", unsafe_allow_html=True)
 
-# Stats
+# --- Common Core Alignment ---
+st.markdown("#### 🎯 Common Core Alignment")
+st.markdown("This lesson aligns with **CCSS.MATH.CONTENT.6.SP.A.2**, which focuses on understanding that a set of data can be described by its center, spread, and overall shape. It covers key measures of center (mean, median, mode) and a measure of spread (range).")
+
 st.markdown("---")
-col1, col2, col3 = st.columns(3)
-total_apps = sum(len(apps) for apps in subjects.values())
-with col1:
-    st.metric("🎯 Total Apps", total_apps)
-with col2:
-    st.metric("👥 Grade Levels", "4-12")
-with col3:
-    st.metric("📚 Subject Areas", len(subjects))
+
+# --- User Input Section ---
+st.header("1. Enter Your Data")
+st.markdown("Enter a list of numbers separated by commas (e.g., `5, 8, 8, 12, 17, 20, 20, 20, 25`).")
+
+user_input = st.text_input("Data Set:", "1, 2, 3, 4, 5, 5, 6, 7, 8, 9")
+
+# --- Data Processing and Calculations ---
+try:
+    data = [float(x.strip()) for x in user_input.split(',') if x.strip()]
+    if not data:
+        st.warning("Please enter some numbers.")
+    else:
+        # Sort the data for median and range calculation
+        data.sort()
+        
+        # Calculate Mean
+        mean_val = np.mean(data)
+        
+        # Calculate Median
+        median_val = np.median(data)
+        
+        # Calculate Mode
+        from collections import Counter
+        counts = Counter(data)
+        max_count = max(counts.values())
+        modes = [key for key, value in counts.items() if value == max_count]
+        
+        # Calculate Range
+        range_val = max(data) - min(data)
+        
+        st.markdown("---")
+        
+        # --- Results and Explanations ---
+        st.header("2. Your Data's Measures of Center and Spread")
+        
+        st.write(f"**Your Data Set:** {', '.join(map(str, data))}")
+        
+        # Display Mean
+        st.markdown("### The Mean (The Average) 📈")
+        st.info(f"The **mean** of your data is **{mean_val:.2f}**.")
+        st.write("The mean is the most common average. You find it by adding all the numbers and dividing by how many numbers there are. It's the 'fair share' if you were to distribute the total equally.")
+        
+        # Display Median
+        st.markdown("### The Median (The Middle) ⚖️")
+        st.info(f"The **median** of your data is **{median_val:.2f}**.")
+        st.write("The median is the number in the middle of a sorted list. It's useful because it isn't affected by extremely high or low values.")
+        
+        # Display Mode
+        st.markdown("### The Mode (The Most Frequent) 🥇")
+        mode_str = ", ".join(map(str, sorted(modes)))
+        if len(modes) == 1:
+            st.info(f"The **mode** of your data is **{mode_str}**.")
+        elif len(modes) > 1:
+            st.info(f"The **modes** of your data are **{mode_str}**.")
+        else:
+            st.warning("Your data has no mode (all numbers appear an equal number of times).")
+        st.write("The mode is the number that appears most often. It's especially useful for data that isn't numerical, like favorite colors.")
+
+        # Display Range
+        st.markdown("### The Range (The Spread) ↔️")
+        st.info(f"The **range** of your data is **{range_val:.2f}**.")
+        st.write("The range tells you how spread out the data is. You calculate it by subtracting the lowest value from the highest value. A larger range means the data is more spread out, while a smaller range means the data points are closer together.")
+
+        st.markdown("---")
+        
+        # --- Visualization Section ---
+        st.header("3. Visualizing Your Data")
+        st.write("This bar chart shows the frequency of each number in your data set.")
+        
+        df = pd.DataFrame(data, columns=['Value'])
+        counts_df = df['Value'].value_counts().reset_index()
+        counts_df.columns = ['Value', 'Frequency']
+        
+        fig = px.bar(counts_df, x='Value', y='Frequency', title='Frequency of Each Data Point',
+                     labels={'Value': 'Value', 'Frequency': 'Count'},
+                     color='Frequency', color_continuous_scale=px.colors.sequential.Plasma)
+        st.plotly_chart(fig, use_container_width=True)
+
+        st.markdown("---")
+        
+        # --- Conclusion and Bridge ---
+        st.header("4. What's Next? 🚀")
+        st.markdown("""
+        Now that you know how to find the center and spread of a data set, you're ready to explore its overall **distribution**. The shape of your data—whether it's clumped together, spread out, or skewed—tells a powerful story about the information.
+        
+        **Ready for the next step?** Head over to **See the Distribution** to learn how the shape of a data set can tell a powerful story!
+        """)
+
+except ValueError:
+    st.error("Please ensure your input contains only numbers separated by commas.")
+
+# --- Resources Section ---
+st.markdown("---")
+st.header("5. Resources for Further Learning 📚")
+
+st.subheader("Practice Your Skills")
+st.markdown("""
+- **Interactive Quiz:** Test your knowledge of mean, median, and mode with this short quiz. [Link to Practice Quiz](https://www.mathgames.com/skill/6.41-find-the-mean-median-mode-and-range)
+- **Practice Problems:** Work through a series of practice problems to become a data expert. [Link to Practice Problems](https://www.khanacademy.org/math/cc-sixth-grade-math/cc-6th-data-statistics/cc-6th-mean-median-mode/e/mean_median_and_mode)
+""")
+
+st.subheader("Video Tutorials & Articles")
+st.markdown("""
+- **Video: Mean, Median, and Mode:** A quick and clear video explanation of the main concepts. [Link to Educational Video](https://www.youtube.com/watch?v=A1T5sM5qK5c)
+- **Article: Why the Median is Important:** Learn about real-world scenarios where the median is a more useful measure than the mean. [Link to Article](https://www.investopedia.com/terms/m/median.asp)
+""")
+
+st.subheader("Worldly Connections 🌐")
+st.markdown("""
+- **Global Temperature Data:** Explore how the mean and range are used to track changes in global climate over time. [Link to Global Temperature Data](https://data.giss.nasa.gov/gistemp/)
+- **Median vs. Mean Income:** Understand why economists often use median household income instead of the mean to get a more accurate picture of a country's wealth. [Link to Economic Article](https://www.census.gov/library/stories/2021/08/what-is-the-difference-between-average-and-median-income.html)
+- **Public Health Statistics:** See how average life expectancy and other public health data are calculated and used to measure the health of a population. [Link to Public Health Data](https://www.who.int/data/gho/data/indicators/indicator-details/GHO/life-expectancy-at-birth-(years))
+""")
+
+
+st.subheader("Your Next Mission")
+st.markdown("Ready to see how these measures fit into the bigger picture?")
+
+# Use st.button to provide an interactive link to the next app
+if st.button("Launch 'See the Distribution' App 🎯", use_container_width=True):
+    # For a real app, you'd use st.components.v1.html to open the link in a new tab
+    st.write("Redirecting to 'See the Distribution'...")
+    # st.components.v1.html(f"<script>window.open('https://vision-distribution.streamlit.app/', '_blank');</script>")
